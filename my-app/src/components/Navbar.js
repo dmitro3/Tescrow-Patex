@@ -18,24 +18,14 @@ import { Web3Provide } from 'ethers'
 import { Avatar, Button, Tooltip } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-// import { BookContext } from '../Context/BookContext';
-// import { useMoralis } from "react-moralis";
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import Popover from '@mui/material/Popover';
-// import UAuth from '@uauth/js'
-// import { WorldIDWidget, WidgetProps } from "@worldcoin/id";
-// import NotificationsPopover from './NotificationsPopover';
 export default function NavbarB() {
     const [value, setValue] = React.useState();
     const web3ModalRef = useRef();
-
-    // const bookContext = React.useContext(BookContext);
-    // const { login, disconnect } = bookContext;
-    // const { Moralis, isAuthenticated, user } = useMoralis();
     const [walletConnected, setWalletConnected] = useState(false);
     const [clientAddress, setClientAddress] = useState();
-console.log(clientAddress);
     const navigate = useNavigate();
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     const [open, setOpen] = React.useState(false);
@@ -64,10 +54,11 @@ console.log(clientAddress);
         const clientAddress = await signerForUserAddress.getAddress();
         setClientAddress(clientAddress);
         const { chainId } = await web3Provider.getNetwork();
-        // if (chainId !== 3141) {
-        //     window.alert("Please switch to the Hyperspace network!");
-        //     throw new Error("Please switch to the Hyperspace network");
-        // }
+        console.log(chainId);
+        if (chainId !== 471100) {
+            window.alert("Please switch to the patex-sepolia network!");
+            throw new Error("Please switch to the patex-sepolia network");
+        }
         if (needSigner) {
             const signer = web3Provider.getSigner();
             return signer;
@@ -89,7 +80,7 @@ console.log(clientAddress);
     useEffect(() => {
         if (!walletConnected) {
             web3ModalRef.current = new Web3Modal({
-                network: "hyperspace",
+                network: "patex-sepolia",
                 providerOptions: {},
                 disableInjectedProvider: false,
             });
@@ -99,6 +90,9 @@ console.log(clientAddress);
         }
     }, []);
 
+    function truncate(str, max, sep) {
+        max = max || 15; var len = str?.length; if (len > max) { sep = sep || "..."; var seplen = sep?.length; if (seplen > max) { return str.substr(len - max) } var n = -0.5 * (max - len - seplen); var center = len / 2; return str.substr(0, center - n) + sep + str.substr(len - center + n); } return str;
+    }
 
 
 
@@ -110,6 +104,7 @@ console.log(clientAddress);
         addr.length > 10 && addr.startsWith('0x')
             ? `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
             : addr
+
     return (
         <div>
             <Box sx={{ flexGrow: 1 }} >
@@ -162,7 +157,10 @@ console.log(clientAddress);
                     }
 
                     <Box sx={{ flexGrow: 0 }}>
-                        {
+                        {   walletConnected ? 
+                        // shortAddress(clientAddress) 
+                        truncate(clientAddress)
+                        : 
 
                             <Button
                                 onClick={connectWallet}

@@ -1,6 +1,6 @@
 task(
     "claim-bounty",
-    "Sends 1 FIL to a whomever the client on the bountied deal is."
+    "Sends 1 ETH to a whomever the client on the bountied deal is."
   )
     .addParam("contract", "The address of the DealRewarder contract")
     .addParam("dealid", "The id of the deal with the completed bounty")

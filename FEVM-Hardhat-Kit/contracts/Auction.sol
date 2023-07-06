@@ -1,5 +1,6 @@
 // SPDX-License-Identifire: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.1;
+
 
 interface ITescrowDevsNFT {
     function balanceOf(address owner) external view returns (uint256);

@@ -4,7 +4,6 @@ import { ethers, Contract, providers, Signer } from 'ethers';
 import { AUCTION_ESCROW_CONTRACT_ADDRESS, AUCTION_ESCROW_ABI, TESCROW_DEVS_NFT_CONTRACT_ADDRESS, TESCROW_DEVS_ABI } from "../constants";
 import '../../src/escrow.css';
 import { Card, CardContent, Box, Button, Checkbox, FormControlLabel, Accordion, AccordionSummary, CircularProgress, Grid, AccordionDetails, TextField, Typography, Select, MenuItem, InputLabel, FormControl, Divider } from "@material-ui/core";
-import CenteredTable from './AuctionTable'
 import { makeStyles } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -13,8 +12,6 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
-// import Button from '@mui/material/Button';
-// import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -52,8 +49,20 @@ export default function Auction() {
     const web3ModalRef = useRef();
     const [open, setOpen] = React.useState(false);
     const [openbid, setOpenbid] = React.useState(false);
+    const [provider, setProvider] = React.useState(null);
+    const [signer, setSigner] = React.useState(null);
 
 
+    async function getSignerFromProvider() {
+        if (typeof window !== "undefined" && window.ethereum) {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            setProvider(provider);
+            const signer = provider.getSigner();
+            setSigner(signer);
+        } else {
+            console.log('No wallet connected or logged out');
+        }
+    }
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -69,7 +78,9 @@ export default function Auction() {
         setOpenbid(false);
     };
     const [walletConnected, setWalletConnected] = useState(false);
+
     const getProviderOrSigner = async (needSigner = false) => {
+
         const provider = await web3ModalRef?.current?.connect();
         const web3Provider = new providers.Web3Provider(provider);
         // console.log((await userAddress).toLowerCase())
@@ -77,10 +88,10 @@ export default function Auction() {
         const clientAddress = await signerForUserAddress.getAddress();
         setClientAddress(clientAddress);
         const { chainId } = await web3Provider.getNetwork();
-        // if (chainId !== 3141) {
-        //     window.alert("Please switch to the Hyperspace network!");
-        //     throw new Error("Please switch to the Hyperspace network");
-        // }
+        if (chainId !== 471100) {
+            window.alert("Please switch to the patex-sepolia network!");
+            throw new Error("Please switch to the patex-sepolia network");
+        }
         if (needSigner) {
             const signer = web3Provider.getSigner();
             return signer;
@@ -113,6 +124,8 @@ export default function Auction() {
         // console.log('tx====', tx);
         setLoading(true)
         await tx.wait();
+        fetchAllAuctions()
+
         // setAuctionId('');
         setMsp(0)
         setLoading(false);
@@ -125,6 +138,8 @@ export default function Auction() {
         const auctionContract = getAuctionContractInstance(signer);
         const tx = await auctionContract.startAuction(_id, auctionEndTime);
         await tx.wait();
+        fetchAllAuctions()
+
         alert('Auction  Started!!');
     }
     function getReadableTime(mili) {
@@ -160,16 +175,18 @@ export default function Auction() {
 
     }
     useEffect(() => {
+        // const sig = getSignerFromProvider();
+        // console.log(sig);
         getTotalNumOfAuction();
+
         if (totalNumOfAuctions > 0) {
             fetchAllAuctions()
-            // GetHighestBid();
         }
     }, [totalNumOfAuctions])
     useEffect(() => {
         if (!walletConnected) {
             web3ModalRef.current = new Web3Modal({
-                network: "goerli",
+                network: "patex-sepolia",
                 providerOptions: {},
                 disableInjectedProvider: false,
             });
@@ -202,8 +219,6 @@ export default function Auction() {
         };
     }
 
-    //  mint nft
-
     const publicMint = async () => {
         setLoading(true);
         try {
@@ -216,9 +231,6 @@ export default function Auction() {
             console.log(nftContract);
             // call the presaleMint from the contract, only whitelisted addresses would be able to mint
             const txn = await nftContract.mint({
-                // value signifies the cost of one crypto dev which is "0.001" eth.
-                // We are parsing `0.001` string to ether using the utils library from ethers.js
-                // " utils.parseEther " will convert 0.001 ethers to " wei ".
                 value: ethers.utils.parseEther("0.001"),
             });
             await txn.wait();
@@ -237,7 +249,7 @@ export default function Auction() {
             const allAuctions = [];
             for (let i = 0; i < totalNumOfAuctions; i++) {
                 const auction = await fetchAuctionById(i);
-                // console.log('auction..', auction);
+                console.log('auction..', auction);
                 allAuctions.push(auction);
             }
             // console.log(allAuctions);
@@ -254,11 +266,14 @@ export default function Auction() {
         );
     };
     const getTotalNumOfAuction = async () => {
-        const provider = await getProviderOrSigner();
-        const escroContract = getAuctionContractInstance(provider);
-        let agreement = await escroContract.numOfAuction();
-        setTotalNumOfAuctions(agreement.toNumber())
-        // console.log(agreement, 'num of auction');
+        try {
+            const provider = await getProviderOrSigner();
+            const escroContract = getAuctionContractInstance(provider);
+            let agreement = await escroContract.numOfAuction();
+            setTotalNumOfAuctions(agreement.toNumber())     
+        } catch (error) {
+            console.error(error);
+        }
     }
     // console.log(StartAuction, '--StartAuction');
     const makeAbid = async (id) => {
@@ -268,6 +283,7 @@ export default function Auction() {
 
         setLoading(true);
         await tx.wait();
+        fetchAllAuctions()
 
         alert('You have made a Bid');
         setLoading(false)
@@ -282,6 +298,7 @@ export default function Auction() {
 
         setLoading(true);
         await tx.wait();
+        fetchAllAuctions()
 
         alert('Relese Funds successfully!!!!');
         setLoading(false)
@@ -362,10 +379,7 @@ export default function Auction() {
                                                 labelId="demo-simple-select-standard-label"
                                                 id="demo-simple-select-standard"
                                             >
-
-                                                <MenuItem value="eth">FIL</MenuItem>
-                                                <MenuItem value="usd">USD</MenuItem>
-                                                <MenuItem value="matic">MATIC</MenuItem>
+                                                <MenuItem value="eth">ETH</MenuItem>
                                             </Select>
                                         </FormControl>
                                     </div>
@@ -438,7 +452,7 @@ export default function Auction() {
                                     <TableCell component="th" scope="row">
                                         {(a?.title)} </TableCell>
                                     <TableCell component="th" scope="row">
-                                        {(a?.msp) / 1000000000000000000} FIL                                    </TableCell>
+                                        {(a?.msp) / 1000000000000000000} ETH                                    </TableCell>
 
 
                                     <TableCell align="right">
@@ -471,7 +485,7 @@ export default function Auction() {
                                             a.highestBid != 0 ? <div>
                                                 <strong style={{ color: "gray" }}>{(truncate(a.highestBidder))}</strong>
                                                 :<span>
-                                                    <strong style={{ color: "red" }}> {(a.highestBid)} FIL</strong>
+                                                    <strong style={{ color: "red" }}> {(a.highestBid)} ETH</strong>
                                                 </span>
 
                                             </div> : ""
@@ -528,38 +542,38 @@ export default function Auction() {
 
                                     {
                                         a.allBid.length === 0 ?
-                                           <p style={{marginTop:"17px"}}>No Bids yet</p> 
-                                    :
-                                    <TableCell align="right">
-                                        <Button variant="outlined" onClick={handleClickOpenbid}>
-                                            See All Bids
-                                        </Button>
-                                        <Dialog open={openbid} onClose={handleClosebid}>
-                                            <DialogTitle>All Bids and Bidders</DialogTitle>
-                                            <DialogContent>
-                                                <DialogContentText>
-                                                    <ul>
-                                                        {
-                                                            a.allBid.map((b) => (
-                                                                <li>
-                                                                    {
-                                                                        Object.entries(b).map(([key, value]) => (
-                                                                            <p className='col-12' style={{ fontSize: "16px" }}><small>{key} : <strong style={{ color: "GrayText" }}>{value}</strong></small></p>
-                                                                        ))
-                                                                    }
-                                                                </li>
-                                                            ))
-                                                        }
-                                                    </ul>
-                                                </DialogContentText>
+                                            <p style={{ marginTop: "17px" }}>No Bids yet</p>
+                                            :
+                                            <TableCell align="right">
+                                                <Button variant="outlined" onClick={handleClickOpenbid}>
+                                                    See All Bids
+                                                </Button>
+                                                <Dialog open={openbid} onClose={handleClosebid}>
+                                                    <DialogTitle>All Bids and Bidders</DialogTitle>
+                                                    <DialogContent>
+                                                        <DialogContentText>
+                                                            <ul>
+                                                                {
+                                                                    a.allBid.map((b) => (
+                                                                        <li>
+                                                                            {
+                                                                                Object.entries(b).map(([key, value]) => (
+                                                                                    <p className='col-12' style={{ fontSize: "16px" }}><small>{key} : <strong style={{ color: "GrayText" }}>{value}</strong></small></p>
+                                                                                ))
+                                                                            }
+                                                                        </li>
+                                                                    ))
+                                                                }
+                                                            </ul>
+                                                        </DialogContentText>
 
-                                            </DialogContent>
-                                            <DialogActions>
-                                                <Button onClick={handleClose}>Cancel</Button>
-                                            </DialogActions>
-                                        </Dialog>
+                                                    </DialogContent>
+                                                    <DialogActions>
+                                                        <Button onClick={handleClose}>Cancel</Button>
+                                                    </DialogActions>
+                                                </Dialog>
 
-                                    </TableCell>
+                                            </TableCell>
                                     }
 
 

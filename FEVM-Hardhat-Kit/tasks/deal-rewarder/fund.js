@@ -1,12 +1,12 @@
 task(
     "fund",
-    "Sends 1 FIL to bounty contract."
+    "Sends 1 ETH to bounty contract."
   )
     .addParam("contract", "The address of the DealRewarder contract")
     .setAction(async (taskArgs) => {
         const contractAddr = taskArgs.contract
         const networkId = network.name
-        console.log("Sending 1 FIL to DealRewarder contract on network", networkId)
+        console.log("Sending 1 ETH to DealRewarder contract on network", networkId)
 
         //create a new wallet instance
         const wallet = new ethers.Wallet(network.config.accounts[0], ethers.provider)

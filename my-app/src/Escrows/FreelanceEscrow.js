@@ -173,6 +173,7 @@ function FreelanceEscrow() {
         await tx.wait();
         // Update the state to reflect the funds being released
         setFundsReleased(true);
+        fetchAllAgreements();
         alert('Funds released successfully.');
     }
 
@@ -187,6 +188,7 @@ function FreelanceEscrow() {
         await tx.wait();
         // Update the state to reflect the funds being released
         // setFundsReleased(true);
+        fetchAllAgreements();
         alert('Agreement canceled.');
     }
 
@@ -200,10 +202,10 @@ function FreelanceEscrow() {
         const clientAddress = await signerForUserAddress.getAddress();
         setClientAddress(clientAddress);
         const { chainId } = await web3Provider.getNetwork();
-        // if (chainId !== 3141) {
-        //     window.alert("Please switch to the Hyperspace network!");
-        //     throw new Error("Please switch to the Hyperspace network");
-        // }
+        if (chainId !== 471100) {
+            window.alert("Please switch to the patex-sepolia network!");
+            throw new Error("Please switch to the patex-sepolia network");
+        }
 
         if (needSigner) {
             const signer = web3Provider.getSigner();
@@ -218,6 +220,7 @@ function FreelanceEscrow() {
 
         const tx = await escroContract.completedWork(id);
         await tx.wait();
+        fetchAllAgreements();
         alert("Marked your work as completed");
     }
 
@@ -235,6 +238,7 @@ function FreelanceEscrow() {
 
         const tx = await escroContract.setDispute(id);
         await tx.wait();
+        fetchAllAgreements();
         alert("Filed dispute!!");
     }
 
@@ -244,7 +248,8 @@ function FreelanceEscrow() {
 
         const tx = await escroContract.stakeProviderEth(_agreementId, { value: _stakeAmount });
         await tx.wait();
-        alert('FIL staked successfully.');
+        fetchAllAgreements();
+        alert('ETH staked successfully.');
     }
 
     const resolveDispute = async (id, trueORfalse) => {
@@ -254,6 +259,7 @@ function FreelanceEscrow() {
 
         const tx = await escroContract.resolveDispute(id, trueORfalse);
         await tx.wait();
+        fetchAllAgreements();
         alert(`Funds transfered to ${trueORfalse ? "Client" : "Service provider"} !!`);
 
     }
@@ -269,13 +275,13 @@ function FreelanceEscrow() {
                             <Button className="providerstake-success-btn m-2" variant=""
                                 onClick={() => resolveDispute(a.agreeId, true)}
                             >
-                                Buyer
+                                Client
                             </Button>
                             {/* <span> */}
                             <Button className="providerstake-success-btn m-2" variant=""
                                 onClick={() => resolveDispute(a.agreeId, false)}
                             >
-                                Seller
+                                Freelancer
                             </Button>
                         </span>
                         {/* </span> */}
@@ -385,7 +391,7 @@ function FreelanceEscrow() {
                                                                         {(truncate(a.clientAdd))}
                                                                     </td>
                                                                     <td className="agreement-table-cell">
-                                                                        {a.agreementAmount / 1000000000000000000} FIL
+                                                                        {a.agreementAmount / 1000000000000000000} ETH
                                                                     </td>
                                                                     <td className="transactions-table-cell transactions-table-cell--large transactions-table-cell--last transactions-table-cell@mobile--fullWidth">
                                                                         <div className="transactions-tags-container">
@@ -403,7 +409,7 @@ function FreelanceEscrow() {
                                                                     <center><h5>Agreement {a.title}'s Details</h5></center>
                                                                     <center>
                                                                         <h6 className='agreement-buyer-stake'>Agreement Amount :<span>
-                                                                            <small><strong style={{ color: "red" }}> {(a.agreementAmount) / 1000000000000000000} FIL</strong>
+                                                                            <small><strong style={{ color: "red" }}> {(a.agreementAmount) / 1000000000000000000} ETH</strong>
                                                                             </small>
                                                                         </span>
                                                                         </h6>
@@ -414,7 +420,7 @@ function FreelanceEscrow() {
                                                                 <div className='col-6'>
                                                                     <div className='row agreement-detail-card'>
                                                                         <div className='col-12 buyerAgreement'>
-                                                                            <h4 className='agreement-buyer'>Buyer</h4>
+                                                                            <h4 className='agreement-buyer'>Client</h4>
                                                                             <p>
                                                                                 <small>
                                                                                     <strong style={{ color: "gray" }}>{(truncate(a.clientAdd))}</strong>
@@ -422,7 +428,7 @@ function FreelanceEscrow() {
                                                                             </p>
                                                                             <h6 className='agreement-buyer-stake'>Staked Amount</h6>
                                                                             <p>
-                                                                                <small><strong style={{ color: "gray" }}>{(a.clientStake)} FIL</strong>
+                                                                                <small><strong style={{ color: "gray" }}>{(a.clientStake)} ETH</strong>
                                                                                 </small></p>
                                                                             {
                                                                                 a.completed ? <h6 style={{ marginBottom: "20px" }} className='agreement-buyer-stake'>Work Status : ✅</h6> : <h6 style={{ marginBottom: "20px" }} className='agreement-buyer-stake'>Work Status :  ❌</h6>
@@ -454,8 +460,8 @@ function FreelanceEscrow() {
                                                                 <div className='col-6'>
                                                                     <div className='row agreement-detail-card'>
                                                                         <div className='col-12 sellerAgreement'>
-                                                                            <h4 className='agreement-buyer'>Seller</h4>
-                                                                            <p><small><strong style={{ color: "gray" }}>{(truncate(a.providerAdd))}</strong></small></p><h6 className='agreement-buyer-stake'>Staked Amount</h6><p><small><strong style={{ color: "gray" }}>{(a.serviceProviderStake)} FIL</strong> </small></p>
+                                                                            <h4 className='agreement-buyer'>Freelancer</h4>
+                                                                            <p><small><strong style={{ color: "gray" }}>{(truncate(a.providerAdd))}</strong></small></p><h6 className='agreement-buyer-stake'>Staked Amount</h6><p><small><strong style={{ color: "gray" }}>{(a.serviceProviderStake)} ETH</strong> </small></p>
                                                                             {a.completed ? <h6 style={{ marginBottom: "20px" }} className='agreement-buyer-stake'>Fund Received : {a.release ? <span >✅</span> : <span >❌</span>}</h6>
                                                                                 : ""}
                                                                         </div>
@@ -496,7 +502,7 @@ function FreelanceEscrow() {
                                                                         {(truncate(a.clientAdd))}
                                                                     </td>
                                                                     <td className="agreement-table-cell">
-                                                                        {a.agreementAmount / 1000000000000000000} FIL</td>
+                                                                        {a.agreementAmount / 1000000000000000000} ETH</td>
                                                                     <td className="transactions-table-cell transactions-table-cell--large transactions-table-cell--last transactions-table-cell@mobile--fullWidth">
                                                                         <div className="transactions-tags-container">
                                                                             <span
@@ -516,7 +522,7 @@ function FreelanceEscrow() {
 
                                                                         <h6 className='agreement-buyer-stake'>Agreement Amount :<span>
 
-                                                                            <small><strong style={{ color: "red" }}> {(a.agreementAmount) / 1000000000000000000} FIL</strong>
+                                                                            <small><strong style={{ color: "red" }}> {(a.agreementAmount) / 1000000000000000000} ETH</strong>
                                                                             </small></span>
                                                                         </h6>
                                                                         <div className='dividerr'></div>
@@ -528,13 +534,13 @@ function FreelanceEscrow() {
                                                                 <div className='container-fluid col-6'>
                                                                     <div className='row agreement-detail-card'>
                                                                         <div className='col-12 buyerAgreement'>
-                                                                            <h4 className='agreement-buyer'>Buyer</h4>
+                                                                            <h4 className='agreement-buyer'>Client</h4>
                                                                             <p><small><strong style={{ color: "gray" }}>{(truncate(a.clientAdd))}</strong>
                                                                             </small></p>
 
                                                                             <h6 className='agreement-buyer-stake'>Staked Amount</h6>
 
-                                                                            <p><small><strong style={{ color: "gray" }}>{(a.clientStake)} FIL</strong>
+                                                                            <p><small><strong style={{ color: "gray" }}>{(a.clientStake)} ETH</strong>
                                                                             </small></p>
 
 
@@ -546,11 +552,11 @@ function FreelanceEscrow() {
                                                                 <div className='col-6'>
                                                                     <div className='row agreement-detail-card'>
                                                                         <div className='col-12 sellerAgreement'>
-                                                                            <h4 className='agreement-buyer'>Seller</h4>
+                                                                            <h4 className='agreement-buyer'>Freelancer</h4>
                                                                             <p><small><strong style={{ color: "gray" }}>{(truncate(a.providerAdd))}</strong>
                                                                             </small></p>
                                                                             <h6 className='agreement-buyer-stake'>Staked Amount</h6>
-                                                                            <p><small><strong style={{ color: "gray" }}>{(a.serviceProviderStake)} FIL</strong>
+                                                                            <p><small><strong style={{ color: "gray" }}>{(a.serviceProviderStake)} ETH</strong>
                                                                             </small></p>
 
 
@@ -594,7 +600,7 @@ function FreelanceEscrow() {
                                                                         {(truncate(a.clientAdd))}
                                                                     </td>
                                                                     <td className="agreement-table-cell">
-                                                                        {a.agreementAmount / 1000000000000000000} FIL
+                                                                        {a.agreementAmount / 1000000000000000000} ETH
                                                                     </td>
 
                                                                     <td className="transactions-table-cell transactions-table-cell--large transactions-table-cell--last transactions-table-cell@mobile--fullWidth">
@@ -619,7 +625,7 @@ function FreelanceEscrow() {
 
                                                                         <h6 className='agreement-buyer-stake'>Agreement Amount :<span>
 
-                                                                            <small><strong style={{ color: "red" }}> {(a.agreementAmount) / 1000000000000000000} FIL</strong>
+                                                                            <small><strong style={{ color: "red" }}> {(a.agreementAmount) / 1000000000000000000} ETH</strong>
                                                                             </small></span>
                                                                         </h6>
                                                                         <div className='dividerr'></div>
@@ -631,13 +637,14 @@ function FreelanceEscrow() {
                                                                 <div className='col-6'>
                                                                     <div className='row agreement-detail-card'>
                                                                         <div className='col-12 buyerAgreement'>
-                                                                            <h4 className='agreement-buyer'>Buyer</h4>
+                                                                            <h4 className='agreement-buyer'>Client
+                                                                            </h4>
                                                                             <p><small><strong style={{ color: "gray" }}>{(truncate(a.clientAdd))}</strong>
                                                                             </small></p>
 
                                                                             <h6 className='agreement-buyer-stake'>Staked Amount</h6>
 
-                                                                            <p><small><strong style={{ color: "gray" }}>{(a.clientStake)} FIL</strong>
+                                                                            <p><small><strong style={{ color: "gray" }}>{(a.clientStake)} ETH</strong>
                                                                             </small></p>
                                                                             {a.release ? <h6 style={{ marginBottom: "20px" }} className='agreement-buyer-stake'>Fund release : ✅</h6> : ""}
 
@@ -650,11 +657,11 @@ function FreelanceEscrow() {
                                                                 <div className='col-6'>
                                                                     <div className='row agreement-detail-card'>
                                                                         <div className='col-12 sellerAgreement'>
-                                                                            <h4 className='agreement-buyer'>Seller</h4>
+                                                                            <h4 className='agreement-buyer'>Freelancer</h4>
                                                                             <p><small><strong style={{ color: "gray" }}>{(truncate(a.providerAdd))}</strong>
                                                                             </small></p>
                                                                             <h6 className='agreement-buyer-stake'>Staked Amount</h6>
-                                                                            <p><small><strong style={{ color: "gray" }}>{(a.serviceProviderStake)} FIL</strong>
+                                                                            <p><small><strong style={{ color: "gray" }}>{(a.serviceProviderStake)} ETH</strong>
                                                                             </small></p>
 
 
@@ -711,9 +718,9 @@ function FreelanceEscrow() {
             <div>
 
                 <div className="main">
-                    <div style={{ textAlign: "center", marginTop:"13vh" }}>
+                    <div style={{ textAlign: "center", marginTop: "13vh" }}>
 
-                        <p><small>Client : <strong style={{ color: "gray", margin:"30vh !important" }}>{(truncate(clientAddress))}</strong>
+                        <p><small>Client : <strong style={{ color: "gray", margin: "30vh !important" }}>{(truncate(clientAddress))}</strong>
                         </small></p>
                     </div>
 
@@ -743,9 +750,7 @@ function FreelanceEscrow() {
                                                     id="demo-simple-select-standard"
                                                 >
 
-                                                    <MenuItem value="eth">FIL</MenuItem>
-                                                    <MenuItem value="usd">USD</MenuItem>
-                                                    <MenuItem value="matic">MATIC</MenuItem>
+                                                    <MenuItem value="matic">ETH</MenuItem>
 
                                                 </Select>
                                             </FormControl>
@@ -764,7 +769,7 @@ function FreelanceEscrow() {
 
                                     <div style={{ overflow: "hidden" }} >
                                         <Typography className='note-class'>
-                                            {amount > 0 ? <div><p>Note that you have to provide    <span style={{ color: "red", fontSize: "20px" }}>{fund}</span>  FIL to Stake</p></div> : ""}
+                                            {amount > 0 ? <div><p>Note that you have to provide    <span style={{ color: "red", fontSize: "20px" }}>{fund}</span>  ETH to Stake</p></div> : ""}
                                         </Typography>
                                     </div>
 
